@@ -1,10 +1,50 @@
+const PI: f32 = std::f32::consts::PI;
+
 pub const WIDTH: u32 = 640;
 pub const HEIGHT: u32 = 480;
 
-pub const DECAY_RATE: f32 = 0.05;
+pub const TRAIL: f32 = 30.0;
+
 pub const PHEROMONE_LIMIT: f32 = 100.0;
 
 pub const TARGET_FPS: u64 = 60;
+
+pub const WOBBLE: f32 = 0.05;
+pub const FORCED_ROT: f32 = 0.0;
+
+pub const AGENTS_N: usize = 40000;
+
+pub const ROT_M_AV: f32 = PI / 3.0;
+pub const ROT_M_DIS: f32 = PI / 9.0;
+
+pub const SPEED_AV: f32 = 3.0;
+pub const SPEED_DIS: f32 = 1.0;
+
+pub const ROT_S_AV: f32 = PI / 4.0;
+pub const ROT_S_DIS: f32 = PI / 12.0;
+
+pub const DIS_S_AV: f32 = 2.0;
+pub const DIS_S_DIS: f32 = 1.0;
+
+pub const C_LEVEL_AV: f32 = 50.0;
+pub const C_LEVEL_DIS: f32 = 10.0;
+
+pub const C_DURATION_AV: u16 = 50;
+pub const C_DURATION_DIS: u16 = 10;
+
+const DECAY: f32 = 0.999;
+
+const RELATIV_C: f32 = 1.0;
+const RELATIV_S: f32 = 2.0;
+const RELATIV_Z: f32 = 100.0;
+
+const SUM: f32 = 4.0 * (RELATIV_C + RELATIV_S) + RELATIV_Z;
+
+const C: f32 = RELATIV_C / SUM * DECAY;
+const S: f32 = RELATIV_S / SUM * DECAY;
+const Z: f32 = RELATIV_Z / SUM * DECAY;
+
+pub const DIFFUSION: [[f32; 3]; 3] = [[C, S, C], [S, Z, S], [C, S, C]];
 
 pub const VIRIDIS: [[u8; 4]; 512] = [
     [0x44, 0x01, 0x54, 0xff],
