@@ -1,8 +1,10 @@
 pub const WIDTH: u32 = 640;
 pub const HEIGHT: u32 = 480;
 
-pub const DECAY_RATE: f32 = 10.0;
+pub const DECAY_RATE: f32 = 0.05;
 pub const PHEROMONE_LIMIT: f32 = 100.0;
+
+pub const TARGET_FPS: u64 = 60;
 
 pub const VIRIDIS: [[u8; 4]; 512] = [
     [0x44, 0x01, 0x54, 0xff],

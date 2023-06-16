@@ -5,6 +5,7 @@ use crate::gui::Framework;
 use error_iter::ErrorIter as _;
 use log::error;
 use pixels::{Error, Pixels, SurfaceTexture};
+use std::time::Instant;
 use winit::dpi::LogicalSize;
 use winit::event::{Event, VirtualKeyCode};
 use winit::event_loop::{ControlFlow, EventLoop};
@@ -16,6 +17,8 @@ mod gui;
 use crate::world::consts::HEIGHT;
 use crate::world::consts::WIDTH;
 use crate::world::world::World;
+
+use crate::world::consts::TARGET_FPS;
 
 pub mod world;
 
@@ -51,6 +54,7 @@ fn main() -> Result<(), Error> {
     let mut world = World::new();
 
     event_loop.run(move |event, _, control_flow| {
+        let start_time = Instant::now();
         // Handle input events
         if input.update(&event) {
             // Close events
@@ -81,6 +85,22 @@ fn main() -> Result<(), Error> {
             // Update internal state and request a redraw
             world.update();
             window.request_redraw();
+
+            let elapsed_time_f32 = Instant::now().duration_since(start_time).as_secs_f32();
+
+            let elapsed_time = (elapsed_time_f32 * 1000.0) as u64;
+
+            let fps = 1.0 / elapsed_time_f32;
+
+            println!("{:.1} fps , {:.2} ms", fps, elapsed_time_f32);
+
+            let wait_millis = match 1000 / TARGET_FPS >= elapsed_time {
+                true => 1000 / TARGET_FPS - elapsed_time,
+                false => 0,
+            };
+            let new_inst = start_time + std::time::Duration::from_millis(wait_millis);
+
+            *control_flow = ControlFlow::WaitUntil(new_inst);
         }
 
         match event {
