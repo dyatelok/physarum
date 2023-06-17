@@ -2,6 +2,8 @@ use crate::world::consts::HEIGHT;
 use crate::world::consts::PHEROMONE_LIMIT;
 use crate::world::consts::WIDTH;
 
+use crate::world::consts::GRADIENT_BOUND;
+
 use crate::world::consts::FORCED_ROT;
 use crate::world::consts::WOBBLE;
 
@@ -35,6 +37,8 @@ const TAU: f32 = std::f32::consts::TAU;
 
 use rand::Rng;
 
+use rayon::prelude::*;
+
 #[derive(Clone, Copy, Debug, Default)]
 struct Cell {
     heat: f32,
@@ -47,7 +51,7 @@ impl Cell {
         }
     }
     fn color(&self) -> [u8; 4] {
-        let i = ((self.heat / PHEROMONE_LIMIT * 511.0).floor() as usize);
+        let i = ((self.heat / GRADIENT_BOUND * 511.0).floor() as usize).min(511);
         VIRIDIS[i]
     }
     fn flush(&mut self) {
@@ -74,7 +78,7 @@ impl Grid {
         for i in 0..HEIGHT as usize {
             for j in 0..WIDTH as usize {
                 let rn: f32 = rng.gen();
-                grid[i][j].heat = rn * PHEROMONE_LIMIT;
+                grid[i][j].heat = 0.0 * rn * PHEROMONE_LIMIT;
             }
         }
 

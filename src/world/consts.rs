@@ -3,40 +3,42 @@ const PI: f32 = std::f32::consts::PI;
 pub const WIDTH: u32 = 640;
 pub const HEIGHT: u32 = 480;
 
-pub const TRAIL: f32 = 30.0;
+pub const TRAIL: f32 = 100.0;
 
-pub const PHEROMONE_LIMIT: f32 = 100.0;
+pub const GRADIENT_BOUND: f32 = 1000.0;
+pub const PHEROMONE_LIMIT: f32 = 1000000.0;
 
-pub const TARGET_FPS: u64 = 60;
+pub const TARGET_FPS: u64 = 10;
+pub const TPF: u64 = 8;
 
-pub const WOBBLE: f32 = 0.05;
-pub const FORCED_ROT: f32 = 0.0;
+pub const WOBBLE: f32 = PI * 0.04;
+pub const FORCED_ROT: f32 = 0.0; //PI / 60.0;
 
 pub const AGENTS_N: usize = 40000;
 
-pub const ROT_M_AV: f32 = PI / 3.0;
-pub const ROT_M_DIS: f32 = PI / 9.0;
+pub const ROT_M_AV: f32 = PI / 7.0;
+pub const ROT_M_DIS: f32 = PI / 32.0;
 
-pub const SPEED_AV: f32 = 3.0;
-pub const SPEED_DIS: f32 = 1.0;
+pub const SPEED_AV: f32 = 1.7;
+pub const SPEED_DIS: f32 = 0.5;
 
-pub const ROT_S_AV: f32 = PI / 4.0;
+pub const ROT_S_AV: f32 = PI / 2.0;
 pub const ROT_S_DIS: f32 = PI / 12.0;
 
-pub const DIS_S_AV: f32 = 2.0;
-pub const DIS_S_DIS: f32 = 1.0;
+pub const DIS_S_AV: f32 = 4.0;
+pub const DIS_S_DIS: f32 = 1.3;
 
-pub const C_LEVEL_AV: f32 = 50.0;
-pub const C_LEVEL_DIS: f32 = 10.0;
+pub const C_LEVEL_AV: f32 = 10000.0;
+pub const C_LEVEL_DIS: f32 = 1000.0;
 
-pub const C_DURATION_AV: u16 = 50;
-pub const C_DURATION_DIS: u16 = 10;
+pub const C_DURATION_AV: u16 = 300;
+pub const C_DURATION_DIS: u16 = 50;
 
-const DECAY: f32 = 0.999;
+const DECAY: f32 = 1.0 - 0.002;
 
 const RELATIV_C: f32 = 1.0;
 const RELATIV_S: f32 = 2.0;
-const RELATIV_Z: f32 = 100.0;
+const RELATIV_Z: f32 = 50.0;
 
 const SUM: f32 = 4.0 * (RELATIV_C + RELATIV_S) + RELATIV_Z;
 

@@ -19,6 +19,7 @@ use crate::world::consts::WIDTH;
 use crate::world::world::World;
 
 use crate::world::consts::TARGET_FPS;
+use crate::world::consts::TPF;
 
 pub mod world;
 
@@ -83,7 +84,9 @@ fn main() -> Result<(), Error> {
             }
 
             // Update internal state and request a redraw
-            world.update();
+            for _ in 0..TPF {
+                world.update();
+            }
             window.request_redraw();
 
             let elapsed_time_f32 = Instant::now().duration_since(start_time).as_secs_f32();
@@ -92,7 +95,7 @@ fn main() -> Result<(), Error> {
 
             let fps = 1.0 / elapsed_time_f32;
 
-            println!("{:.1} fps , {:.2} ms", fps, elapsed_time_f32);
+            println!("{:.1} fps , {:.2} ms", fps, elapsed_time);
 
             let wait_millis = match 1000 / TARGET_FPS >= elapsed_time {
                 true => 1000 / TARGET_FPS - elapsed_time,
