@@ -265,75 +265,75 @@ impl Agent {
         grid: &mut Vec<Vec<RwLock<Cell>>>,
         prev: &Vec<Vec<RwLock<Cell>>>,
     ) {
-        let phers: Vec<(usize, usize)> = agents
-            .iter_mut()
-            .map(|a| {
-                let mut rng = rand::thread_rng();
-                //read data from sensors
-                let sen_r_c = Agent::pos(a.cord, a.dir, a.rot_s, a.dis_s);
-                let sen_m_c = Agent::pos(a.cord, a.dir, 0.0, a.dis_s);
-                let sen_l_c = Agent::pos(a.cord, a.dir, -a.rot_s, a.dis_s);
+        //let phers: Vec<(usize, usize)> =
+        agents.par_iter_mut().for_each(|a| {
+            //map(|a| {
+            let mut rng = rand::thread_rng();
+            //read data from sensors
+            let sen_r_c = Agent::pos(a.cord, a.dir, a.rot_s, a.dis_s);
+            let sen_m_c = Agent::pos(a.cord, a.dir, 0.0, a.dis_s);
+            let sen_l_c = Agent::pos(a.cord, a.dir, -a.rot_s, a.dis_s);
 
-                let sen_r = prev[sen_r_c.1.floor() as usize][sen_r_c.0.floor() as usize]
-                    .read()
-                    .unwrap()
-                    .heat;
-                let sen_m = prev[sen_m_c.1.floor() as usize][sen_m_c.0.floor() as usize]
-                    .read()
-                    .unwrap()
-                    .heat;
-                let sen_l = prev[sen_l_c.1.floor() as usize][sen_l_c.0.floor() as usize]
-                    .read()
-                    .unwrap()
-                    .heat;
-                //move according to the data
-                if !a.is_crazy {
-                    if sen_m >= sen_r && sen_m >= sen_l {
-                    } else {
-                        if sen_r >= sen_l {
-                            a.dir += a.rot_m;
-                        } else {
-                            a.dir -= a.rot_m;
-                        }
-                    }
-                    a.cord = Agent::pos(a.cord, a.dir, 0.0, a.speed);
-                    if sen_m > a.c_level {
-                        a.is_crazy = true;
-                        a.c_timer = a.c_duration;
-                    }
+            let sen_r = prev[sen_r_c.1.floor() as usize][sen_r_c.0.floor() as usize]
+                .read()
+                .unwrap()
+                .heat;
+            let sen_m = prev[sen_m_c.1.floor() as usize][sen_m_c.0.floor() as usize]
+                .read()
+                .unwrap()
+                .heat;
+            let sen_l = prev[sen_l_c.1.floor() as usize][sen_l_c.0.floor() as usize]
+                .read()
+                .unwrap()
+                .heat;
+            //move according to the data
+            if !a.is_crazy {
+                if sen_m >= sen_r && sen_m >= sen_l {
                 } else {
-                    if sen_m <= sen_r && sen_m <= sen_l {
+                    if sen_r >= sen_l {
+                        a.dir += a.rot_m;
                     } else {
-                        if sen_r <= sen_l {
-                            a.dir += a.rot_m;
-                        } else {
-                            a.dir -= a.rot_m;
-                        }
-                    }
-                    a.cord = Agent::pos(a.cord, a.dir, 0.0, a.speed);
-                    a.c_timer -= 1;
-                    if a.c_timer == 0 {
-                        a.is_crazy = false;
+                        a.dir -= a.rot_m;
                     }
                 }
-                //add forced parameters
-                let rn: f32 = rng.gen();
-                a.dir += (rn * 2.0 - 1.0) * WOBBLE;
-                a.dir += FORCED_ROT;
+                a.cord = Agent::pos(a.cord, a.dir, 0.0, a.speed);
+                if sen_m > a.c_level {
+                    a.is_crazy = true;
+                    a.c_timer = a.c_duration;
+                }
+            } else {
+                if sen_m <= sen_r && sen_m <= sen_l {
+                } else {
+                    if sen_r <= sen_l {
+                        a.dir += a.rot_m;
+                    } else {
+                        a.dir -= a.rot_m;
+                    }
+                }
+                a.cord = Agent::pos(a.cord, a.dir, 0.0, a.speed);
+                a.c_timer -= 1;
+                if a.c_timer == 0 {
+                    a.is_crazy = false;
+                }
+            }
+            //add forced parameters
+            let rn: f32 = rng.gen();
+            a.dir += (rn * 2.0 - 1.0) * WOBBLE;
+            a.dir += FORCED_ROT;
 
-                //leave pheromone on grid
+            //leave pheromone on grid
 
-                (a.cord.1.floor() as usize, a.cord.0.floor() as usize)
+            //(a.cord.1.floor() as usize, a.cord.0.floor() as usize)
 
-                /*grid[a.cord.1.floor() as usize][a.cord.0.floor() as usize]
+            grid[a.cord.1.floor() as usize][a.cord.0.floor() as usize]
                 .write()
                 .unwrap()
-                .add(TRAIL);*/
-            })
-            .collect();
+                .add(TRAIL);
+        });
+        /*.collect();
         phers.iter().for_each(|(y, x)| {
             grid[*y][*x].write().unwrap().add(TRAIL);
-        });
+        });*/
     }
 }
 
