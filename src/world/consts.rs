@@ -9,7 +9,11 @@ pub const GRADIENT_BOUND: f32 = 1000.0;
 pub const PHEROMONE_LIMIT: f32 = 1000000.0;
 
 pub const TARGET_FPS: u64 = 60;
+<<<<<<< HEAD
 pub const TPF: u64 = 1;
+=======
+pub const TPF: u64 = 10;
+>>>>>>> refs/remotes/origin/main
 
 pub const WOBBLE: f32 = PI * 0.04;
 pub const FORCED_ROT: f32 = 0.0; //PI / 60.0;

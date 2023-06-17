@@ -100,7 +100,11 @@ fn main() -> Result<(), Error> {
 
             let fps = 1.0 / elapsed_time_f32;
 
+<<<<<<< HEAD
             println!("tpf: {} , fps: {:.1} , loop time: {:.2} ms , total compute time: {:.2} ms , compute time per tick: {:.2} ms , draw time: {:.2} ms", TPF, fps, elapsed_time_f32 * 1000.0, compute_time * 1000.0, compute_time * 1000.0 / TPF as f32, draw_time * 1000.0);
+=======
+            println!("fps: {:.1} , loop time: {:.2} ms , total compute time: {:.2} ms , compute time per tick: {:.2} ms , draw time: {:.2} ms", fps, elapsed_time_f32 * 1000.0, compute_time * 1000.0, compute_time * 1000.0 / TPF as f32, draw_time * 1000.0);
+>>>>>>> refs/remotes/origin/main
 
 
             let elapsed_time = (elapsed_time_f32 * 1000.0) as u64;
