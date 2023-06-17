@@ -1,3 +1,5 @@
+use std::sync::atomic::AtomicPtr;
+
 use crate::world::consts::HEIGHT;
 use crate::world::consts::PHEROMONE_LIMIT;
 use crate::world::consts::WIDTH;
@@ -238,54 +240,61 @@ impl Agent {
         ans
     }
     fn step(agents: &mut Vec<Self>, grid: &mut Vec<Vec<Cell>>, prev: &Vec<Vec<Cell>>) {
-        let mut rng = rand::thread_rng();
+        let phers: Vec<(usize, usize)> = agents
+            .par_iter_mut()
+            .map(|a| {
+                let mut rng = rand::thread_rng();
+                //leave pheromone on grid
+                //grid[a.cord.1.floor() as usize][a.cord.0.floor() as usize].add(TRAIL);
 
-        for a in agents {
-            //leave pheromone on grid
-            grid[a.cord.1.floor() as usize][a.cord.0.floor() as usize].add(TRAIL);
-            //read data from sensors
-            let sen_r_c = Agent::pos(a.cord, a.dir, a.rot_s, a.dis_s);
-            let sen_m_c = Agent::pos(a.cord, a.dir, 0.0, a.dis_s);
-            let sen_l_c = Agent::pos(a.cord, a.dir, -a.rot_s, a.dis_s);
+                //read data from sensors
+                let sen_r_c = Agent::pos(a.cord, a.dir, a.rot_s, a.dis_s);
+                let sen_m_c = Agent::pos(a.cord, a.dir, 0.0, a.dis_s);
+                let sen_l_c = Agent::pos(a.cord, a.dir, -a.rot_s, a.dis_s);
 
-            let sen_r = prev[sen_r_c.1.floor() as usize][sen_r_c.0.floor() as usize].heat;
-            let sen_m = prev[sen_m_c.1.floor() as usize][sen_m_c.0.floor() as usize].heat;
-            let sen_l = prev[sen_l_c.1.floor() as usize][sen_l_c.0.floor() as usize].heat;
-            //move according to the data
-            if !a.is_crazy {
-                if sen_m >= sen_r && sen_m >= sen_l {
-                } else {
-                    if sen_r >= sen_l {
-                        a.dir += a.rot_m;
+                let sen_r = prev[sen_r_c.1.floor() as usize][sen_r_c.0.floor() as usize].heat;
+                let sen_m = prev[sen_m_c.1.floor() as usize][sen_m_c.0.floor() as usize].heat;
+                let sen_l = prev[sen_l_c.1.floor() as usize][sen_l_c.0.floor() as usize].heat;
+                //move according to the data
+                if !a.is_crazy {
+                    if sen_m >= sen_r && sen_m >= sen_l {
                     } else {
-                        a.dir -= a.rot_m;
+                        if sen_r >= sen_l {
+                            a.dir += a.rot_m;
+                        } else {
+                            a.dir -= a.rot_m;
+                        }
+                    }
+                    a.cord = Agent::pos(a.cord, a.dir, 0.0, a.speed);
+                    if sen_m > a.c_level {
+                        a.is_crazy = true;
+                        a.c_timer = a.c_duration;
+                    }
+                } else {
+                    if sen_m <= sen_r && sen_m <= sen_l {
+                    } else {
+                        if sen_r <= sen_l {
+                            a.dir += a.rot_m;
+                        } else {
+                            a.dir -= a.rot_m;
+                        }
+                    }
+                    a.cord = Agent::pos(a.cord, a.dir, 0.0, a.speed);
+                    a.c_timer -= 1;
+                    if a.c_timer == 0 {
+                        a.is_crazy = false;
                     }
                 }
-                a.cord = Agent::pos(a.cord, a.dir, 0.0, a.speed);
-                if sen_m > a.c_level {
-                    a.is_crazy = true;
-                    a.c_timer = a.c_duration;
-                }
-            } else {
-                if sen_m <= sen_r && sen_m <= sen_l {
-                } else {
-                    if sen_r <= sen_l {
-                        a.dir += a.rot_m;
-                    } else {
-                        a.dir -= a.rot_m;
-                    }
-                }
-                a.cord = Agent::pos(a.cord, a.dir, 0.0, a.speed);
-                a.c_timer -= 1;
-                if a.c_timer == 0 {
-                    a.is_crazy = false;
-                }
-            }
-            //add forced parameters
-            let rn: f32 = rng.gen();
-            a.dir += (rn * 2.0 - 1.0) * WOBBLE;
-            a.dir += FORCED_ROT;
-        }
+                //add forced parameters
+                let rn: f32 = rng.gen();
+                a.dir += (rn * 2.0 - 1.0) * WOBBLE;
+                a.dir += FORCED_ROT;
+                (a.cord.1.floor() as usize, a.cord.0.floor() as usize)
+            })
+            .collect();
+        phers.iter().for_each(|(y, x)| {
+            grid[*y][*x].add(TRAIL);
+        });
     }
 }
 
