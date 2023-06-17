@@ -1,5 +1,3 @@
-use std::sync::atomic::AtomicPtr;
-
 use crate::world::consts::HEIGHT;
 use crate::world::consts::PHEROMONE_LIMIT;
 use crate::world::consts::WIDTH;

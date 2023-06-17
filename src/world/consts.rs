@@ -8,8 +8,8 @@ pub const TRAIL: f32 = 100.0;
 pub const GRADIENT_BOUND: f32 = 1000.0;
 pub const PHEROMONE_LIMIT: f32 = 1000000.0;
 
-pub const TARGET_FPS: u64 = 10;
-pub const TPF: u64 = 8;
+pub const TARGET_FPS: u64 = 60;
+pub const TPF: u64 = 10;
 
 pub const WOBBLE: f32 = PI * 0.04;
 pub const FORCED_ROT: f32 = 0.0; //PI / 60.0;

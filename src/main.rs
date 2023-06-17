@@ -84,20 +84,28 @@ fn main() -> Result<(), Error> {
             }
 
             // Update internal state and request a redraw
+            let start_compute = Instant::now();
             for _ in 0..TPF {
                 world.update();
             }
+            let compute_time = Instant::now().duration_since(start_compute).as_secs_f32();
+
+            let start_draw = Instant::now();
             window.request_redraw();
+            let draw_time = Instant::now().duration_since(start_draw).as_secs_f32();
+
 
             let elapsed_time_f32 = Instant::now().duration_since(start_time).as_secs_f32();
 
-            let elapsed_time = (elapsed_time_f32 * 1000.0) as u64;
 
             let fps = 1.0 / elapsed_time_f32;
 
-            println!("{:.1} fps , {:.2} ms", fps, elapsed_time);
+            println!("fps: {:.1} , loop time: {:.2} ms , total compute time: {:.2} ms , compute time per tick: {:.2} ms , draw time: {:.2} ms", fps, elapsed_time_f32 * 1000.0, compute_time * 1000.0, compute_time * 1000.0 / TPF as f32, draw_time * 1000.0);
 
-            let wait_millis = match 1000 / TARGET_FPS >= elapsed_time {
+
+            let elapsed_time = (elapsed_time_f32 * 1000.0) as u64;
+
+                        let wait_millis = match 1000 / TARGET_FPS >= elapsed_time {
                 true => 1000 / TARGET_FPS - elapsed_time,
                 false => 0,
             };
