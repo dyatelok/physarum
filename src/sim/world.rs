@@ -1,37 +1,37 @@
-use crate::world::consts::HEIGHT;
-use crate::world::consts::PHEROMONE_LIMIT;
-use crate::world::consts::WIDTH;
+use crate::sim::consts::HEIGHT;
+use crate::sim::consts::PHEROMONE_LIMIT;
+use crate::sim::consts::WIDTH;
 
-use crate::world::consts::GRADIENT_BOUND;
+use crate::sim::consts::GRADIENT_BOUND;
 
-use crate::world::consts::FORCED_ROT;
-use crate::world::consts::WOBBLE;
+use crate::sim::consts::FORCED_ROT;
+use crate::sim::consts::WOBBLE;
 
-use crate::world::consts::TRAIL;
+use crate::sim::consts::TRAIL;
 
-use crate::world::consts::AGENTS_N;
+use crate::sim::consts::AGENTS_N;
 
-use crate::world::consts::DIFFUSION;
+use crate::sim::consts::DIFFUSION;
 
-use crate::world::consts::ROT_M_AV;
-use crate::world::consts::ROT_M_DIS;
+use crate::sim::consts::ROT_M_AV;
+use crate::sim::consts::ROT_M_DIS;
 
-use crate::world::consts::SPEED_AV;
-use crate::world::consts::SPEED_DIS;
+use crate::sim::consts::SPEED_AV;
+use crate::sim::consts::SPEED_DIS;
 
-use crate::world::consts::ROT_S_AV;
-use crate::world::consts::ROT_S_DIS;
+use crate::sim::consts::ROT_S_AV;
+use crate::sim::consts::ROT_S_DIS;
 
-use crate::world::consts::DIS_S_AV;
-use crate::world::consts::DIS_S_DIS;
+use crate::sim::consts::DIS_S_AV;
+use crate::sim::consts::DIS_S_DIS;
 
-use crate::world::consts::C_LEVEL_AV;
-use crate::world::consts::C_LEVEL_DIS;
+use crate::sim::consts::C_LEVEL_AV;
+use crate::sim::consts::C_LEVEL_DIS;
 
-use crate::world::consts::C_DURATION_AV;
-use crate::world::consts::C_DURATION_DIS;
+use crate::sim::consts::C_DURATION_AV;
+use crate::sim::consts::C_DURATION_DIS;
 
-use crate::world::consts::VIRIDIS;
+use crate::sim::consts::VIRIDIS;
 
 const TAU: f32 = std::f32::consts::TAU;
 

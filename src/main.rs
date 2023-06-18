@@ -14,14 +14,14 @@ use winit_input_helper::WinitInputHelper;
 
 mod gui;
 
-use crate::world::consts::HEIGHT;
-use crate::world::consts::WIDTH;
-use crate::world::world::World;
+use crate::sim::consts::HEIGHT;
+use crate::sim::consts::WIDTH;
+use crate::sim::world::World;
 
-use crate::world::consts::TARGET_FPS;
-use crate::world::consts::TPF;
+use crate::sim::consts::TARGET_FPS;
+use crate::sim::consts::TPF;
 
-pub mod world;
+pub mod sim;
 
 fn main() -> Result<(), Error> {
     env_logger::init();
@@ -53,6 +53,8 @@ fn main() -> Result<(), Error> {
         (pixels, framework)
     };
     let mut world = World::new();
+
+    let mut counter: usize = 10;
 
     event_loop.run(move |event, _, control_flow| {
         let start_time = Instant::now();
@@ -124,7 +126,7 @@ println!("tpf: {} , fps: {:.1} , loop time: {:.2} ms , total compute time: {:.2}
                 world.draw(pixels.frame_mut());
 
                 // Prepare egui
-                framework.prepare(&window);
+                framework.prepare(&window,&mut counter);
 
                 // Render everything together
                 let render_result = pixels.render_with(|encoder, render_target, context| {

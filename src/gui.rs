@@ -76,12 +76,12 @@ impl Framework {
     }
 
     /// Prepare egui.
-    pub(crate) fn prepare(&mut self, window: &Window) {
+    pub(crate) fn prepare(&mut self, window: &Window, counter: &mut usize) {
         // Run the egui frame and create all paint jobs to prepare for rendering.
         let raw_input = self.egui_state.take_egui_input(window);
         let output = self.egui_ctx.run(raw_input, |egui_ctx| {
             // Draw the demo application.
-            self.gui.ui(egui_ctx);
+            self.gui.ui(egui_ctx, counter);
         });
 
         self.textures.append(output.textures_delta);
@@ -144,7 +144,7 @@ impl Gui {
     }
 
     /// Create the UI using egui.
-    fn ui(&mut self, ctx: &Context) {
+    fn ui(&mut self, ctx: &Context, counter: &mut usize) {
         egui::TopBottomPanel::top("menubar_container").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
@@ -152,7 +152,16 @@ impl Gui {
                         self.window_open = true;
                         ui.close_menu();
                     }
-                })
+                });
+                ui.horizontal(|ui| {
+                    if ui.button("-").clicked() {
+                        *counter -= 1;
+                    }
+                    ui.label(counter.to_string());
+                    if ui.button("+").clicked() {
+                        *counter += 1;
+                    }
+                });
             });
         });
 
