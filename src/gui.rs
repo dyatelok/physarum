@@ -22,12 +22,6 @@ pub(crate) struct Framework {
     gui: Gui,
 }
 
-/// Example application state. A real application will need a lot more state than this.
-struct Gui {
-    /// Only show the egui window when true.
-    window_open: bool,
-}
-
 impl Framework {
     /// Create egui.
     pub(crate) fn new<T>(
@@ -141,21 +135,36 @@ impl Framework {
     }
 }
 
+/// Example application state. A real application will need a lot more state than this.
+struct Gui {
+    /// Only show the egui window when true.
+    about_window: bool,
+    parameters_window: bool,
+    saveload_window: bool,
+}
+
 impl Gui {
     /// Create a `Gui`.
     fn new() -> Self {
-        Self { window_open: true }
+        Self {
+            about_window: false,
+            parameters_window: false,
+            saveload_window: false,
+        }
     }
 
     /// Create the UI using egui.
     fn ui(&mut self, ctx: &Context, params: &mut Params) {
         egui::TopBottomPanel::top("menubar_container").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
-                ui.menu_button("File", |ui| {
-                    if ui.button("Parameters").clicked() {
-                        self.window_open = true;
-                        ui.close_menu();
-                    }
+                ui.menu_button("About", |_| {
+                    self.about_window = true;
+                });
+                ui.menu_button("Parameters", |_| {
+                    self.parameters_window = true;
+                });
+                ui.menu_button("Save / Load", |_| {
+                    self.saveload_window = true;
                 });
                 ui.horizontal(|ui| {
                     ui.toggle_value(&mut params.do_render_pheromone, "pheromone");
@@ -164,8 +173,15 @@ impl Gui {
             });
         });
 
-        egui::Window::new("Hello, egui!")
-            .open(&mut self.window_open)
+        egui::Window::new("About")
+            .open(&mut self.about_window)
+            .show(ctx, |ui| {
+                ui.label("Learn more about this program at");
+                ui.hyperlink("https://github.com/dyatelok/physarum");
+            });
+
+        egui::Window::new("Paramerers")
+            .open(&mut self.parameters_window)
             .show(ctx, |ui| {
                 ui.label("Those are simulation parameters.");
 
@@ -184,9 +200,42 @@ impl Gui {
                 if ui.button("Randomize parameters").clicked() {
                     params.randomize();
                 }
+            });
 
-                ui.label("Learn more about this program at");
-                ui.hyperlink("https://github.com/dyatelok/physarum");
+        egui::Window::new("Save / Load")
+            .open(&mut self.saveload_window)
+            .show(ctx, |ui| {
+                ui.horizontal(|ui| {
+                    if ui.button("Save parameters").clicked() {
+                        params.save();
+                    }
+                    ui.label("Save to file:");
+                });
+                ui.horizontal(|ui| {
+                    ui.add_sized(
+                        egui::Vec2::from((100.0, 15.0)),
+                        egui::TextEdit::singleline(&mut params.save_to),
+                    );
+                    ui.label(".json");
+                });
+
+                ui.separator();
+
+                ui.horizontal(|ui| {
+                    if ui.button("Load parameters").clicked() {
+                        params.load();
+                    }
+                    ui.label("Load from file:");
+                });
+                ui.horizontal(|ui| {
+                    ui.add_sized(
+                        egui::Vec2::from((100.0, 15.0)),
+                        egui::TextEdit::singleline(&mut params.load_from),
+                    );
+                    ui.label(".json");
+                });
+                /*ui.label("Learn more about this program at");
+                ui.hyperlink("https://github.com/dyatelok/physarum");*/
             });
     }
 }

@@ -1,7 +1,12 @@
 const PI: f32 = std::f32::consts::PI;
 
 use rand::Rng;
+use serde::{Deserialize, Serialize};
+use serde_json::json;
+use std::fs::File;
+use std::io::prelude::*;
 
+#[derive(Serialize, Deserialize)]
 pub struct Params {
     pub do_update_world: bool,
     pub do_render_pheromone: bool,
@@ -23,6 +28,8 @@ pub struct Params {
     pub c_level_dis: f32,
     pub c_duration_av: u16,
     pub c_duration_dis: u16,
+    pub save_to: String,
+    pub load_from: String,
 }
 
 impl Params {
@@ -58,6 +65,9 @@ impl Params {
 
             c_duration_av: 300,
             c_duration_dis: 50,
+
+            save_to: String::new(),
+            load_from: String::new(),
         }
     }
     pub fn randomize(&mut self) {
@@ -82,5 +92,54 @@ impl Params {
 
         self.c_duration_av = (rng.gen::<f32>() * 500.0) as u16;
         self.c_duration_dis = self.c_duration_av / 10;
+    }
+    fn write_to(name: String, content: String) -> std::io::Result<()> {
+        let mut file = File::create(name)?;
+        file.write_all(content.as_bytes())?;
+        Ok(())
+    }
+    pub fn save(&mut self) {
+        let save_to = "sim_params/".to_string() + self.save_to.as_str() + ".json";
+        self.save_to = String::new();
+        self.load_from = String::new();
+        let content = json!(self).to_string();
+        match Params::write_to(save_to.clone(), content) {
+            Ok(()) => {
+                println!("Saved current parameters to {}", save_to);
+            }
+            Err(a) => {
+                println!("Failed to write to the file: {}", a);
+            }
+        }
+    }
+    fn read_from(name: String) -> String {
+        let mut file = match File::open(name.clone()) {
+            Ok(file) => file,
+            Err(a) => {
+                panic!("Failed to read from file: {}", a);
+            }
+        };
+        let mut contents = String::new();
+        match file.read_to_string(&mut contents) {
+            Ok(_) => {
+                println!("Loaded parameters from: {}", name);
+            }
+            Err(a) => {
+                panic!("Failed to read from file: {}", a);
+            }
+        }
+        contents
+    }
+    pub fn load(&mut self) {
+        let load_from = "sim_params/".to_string() + self.load_from.as_str() + ".json";
+        let content = Params::read_from(load_from.clone());
+        let params: Params = match serde_json::from_str(content.as_str()) {
+            Ok(a) => a,
+            Err(e) => {
+                panic!("Failed to convert json to Params: {}", e);
+            }
+        };
+        *self = params;
+        self.do_update_world = true;
     }
 }

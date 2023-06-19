@@ -92,6 +92,7 @@ fn main() -> Result<(), Error> {
 
             if params.do_update_world {
                 world = World::new(&params);
+                params.do_update_world = false;
             }
             
             let start_compute = Instant::now();
