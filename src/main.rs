@@ -21,6 +21,8 @@ use crate::sim::world::World;
 use crate::sim::consts::TARGET_FPS;
 use crate::sim::consts::TPF;
 
+use crate::sim::params::Params;
+
 pub mod sim;
 
 fn main() -> Result<(), Error> {
@@ -52,9 +54,10 @@ fn main() -> Result<(), Error> {
 
         (pixels, framework)
     };
-    let mut world = World::new();
 
-    let mut counter: usize = 10;
+    let mut params = Params::new();
+
+    let mut world = World::new(&params);
 
     event_loop.run(move |event, _, control_flow| {
         let start_time = Instant::now();
@@ -67,7 +70,7 @@ fn main() -> Result<(), Error> {
             }
 
             if input.key_pressed(VirtualKeyCode::Space) {
-                world.update();
+                world.update(&params);
             }
 
             // Update the scale factor
@@ -86,9 +89,14 @@ fn main() -> Result<(), Error> {
             }
 
             // Update internal state and request a redraw
+
+            if params.do_update_world {
+                world = World::new(&params);
+            }
+            
             let start_compute = Instant::now();
             for _ in 0..TPF {
-                world.update();
+                world.update(&params);
             }
             let compute_time = Instant::now().duration_since(start_compute).as_secs_f32();
 
@@ -102,7 +110,14 @@ fn main() -> Result<(), Error> {
 
             let fps = 1.0 / elapsed_time_f32;
 
-println!("tpf: {} , fps: {:.1} , loop time: {:.2} ms , total compute time: {:.2} ms , compute time per tick: {:.2} ms , draw time: {:.2} ms", TPF, fps, elapsed_time_f32 * 1000.0, compute_time * 1000.0, compute_time * 1000.0 / TPF as f32, draw_time * 1000.0);
+            println!("tpf: {} , fps: {:.1} , loop time: {:.2} ms , total compute time: {:.2} ms , compute time per tick: {:.2} ms , draw time: {:.2} ms", 
+                TPF, 
+                fps, 
+                elapsed_time_f32 * 1000.0,
+                compute_time * 1000.0,
+                compute_time * 1000.0 / TPF as f32,
+                draw_time * 1000.0
+            );
 
             let elapsed_time = (elapsed_time_f32 * 1000.0) as u64;
 
@@ -123,10 +138,10 @@ println!("tpf: {} , fps: {:.1} , loop time: {:.2} ms , total compute time: {:.2}
             // Draw the current frame
             Event::RedrawRequested(_) => {
                 // Draw the world
-                world.draw(pixels.frame_mut());
+                world.draw(pixels.frame_mut(),&params);
 
                 // Prepare egui
-                framework.prepare(&window,&mut counter);
+                framework.prepare(&window,&mut params);
 
                 // Render everything together
                 let render_result = pixels.render_with(|encoder, render_target, context| {

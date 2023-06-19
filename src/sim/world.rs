@@ -1,37 +1,13 @@
 use crate::sim::consts::HEIGHT;
-use crate::sim::consts::PHEROMONE_LIMIT;
 use crate::sim::consts::WIDTH;
-
-use crate::sim::consts::GRADIENT_BOUND;
-
-use crate::sim::consts::FORCED_ROT;
-use crate::sim::consts::WOBBLE;
-
-use crate::sim::consts::TRAIL;
 
 use crate::sim::consts::AGENTS_N;
 
 use crate::sim::consts::DIFFUSION;
 
-use crate::sim::consts::ROT_M_AV;
-use crate::sim::consts::ROT_M_DIS;
-
-use crate::sim::consts::SPEED_AV;
-use crate::sim::consts::SPEED_DIS;
-
-use crate::sim::consts::ROT_S_AV;
-use crate::sim::consts::ROT_S_DIS;
-
-use crate::sim::consts::DIS_S_AV;
-use crate::sim::consts::DIS_S_DIS;
-
-use crate::sim::consts::C_LEVEL_AV;
-use crate::sim::consts::C_LEVEL_DIS;
-
-use crate::sim::consts::C_DURATION_AV;
-use crate::sim::consts::C_DURATION_DIS;
-
 use crate::sim::consts::VIRIDIS;
+
+use crate::sim::params::Params;
 
 const TAU: f32 = std::f32::consts::TAU;
 
@@ -47,18 +23,35 @@ struct Cell {
 impl Cell {
     fn new(pheromone_level: f32) -> Self {
         Self {
-            heat: pheromone_level.min(PHEROMONE_LIMIT),
+            heat: pheromone_level,
         }
     }
-    fn color(&self) -> [u8; 4] {
-        let i = ((self.heat / GRADIENT_BOUND * 511.0).floor() as usize).min(511);
+    fn color(&self, params: &Params) -> [u8; 4] {
+        let i = ((self.heat / params.gradient_bound * 511.0).floor() as usize).min(511);
         VIRIDIS[i]
     }
     fn flush(&mut self) {
         self.heat = 0.0;
     }
     fn add(&mut self, add: f32) {
-        self.heat = (self.heat + add).min(PHEROMONE_LIMIT);
+        self.heat = self.heat + add;
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default)]
+struct Ast {
+    state: u8,
+    // 0 - no agent
+    // 1 - normal agent
+    // 2 - panic agent
+}
+
+impl Ast {
+    fn new(state: u8) -> Self {
+        Self { state }
+    }
+    fn set(&mut self, state: u8) {
+        self.state = state;
     }
 }
 
@@ -67,18 +60,16 @@ struct Grid {
     grid0: Vec<Vec<Cell>>,
     grid1: Vec<Vec<Cell>>,
     neighbors: Vec<Vec<[[(usize, usize); 3]; 3]>>,
+    ag: Vec<Vec<Ast>>,
 }
 
 impl Grid {
     fn new() -> Self {
-        let mut rng = rand::thread_rng();
-
         let mut grid: Vec<Vec<Cell>> = vec![vec![Cell::new(0.0); WIDTH as usize]; HEIGHT as usize];
 
         for i in 0..HEIGHT as usize {
             for j in 0..WIDTH as usize {
-                let rn: f32 = rng.gen();
-                grid[i][j].heat = 0.0 * rn * PHEROMONE_LIMIT;
+                grid[i][j].heat = 0.0;
             }
         }
 
@@ -106,37 +97,32 @@ impl Grid {
             grid0: grid,
             grid1: vec![vec![Cell::new(0.0); WIDTH as usize]; HEIGHT as usize],
             neighbors,
+            ag: vec![vec![Ast::new(0); WIDTH as usize]; HEIGHT as usize],
         }
     }
-    fn get_grid(&self) -> &Vec<Vec<Cell>> {
+    fn get_grid_ag(&self) -> (&Vec<Vec<Cell>>, &Vec<Vec<Ast>>) {
         if !self.state {
-            &self.grid0
+            (&self.grid0, &self.ag)
         } else {
-            &self.grid1
+            (&self.grid1, &self.ag)
         }
     }
-    /*fn get_mutgrid(&mut self) -> &mut Vec<Vec<Cell>> {
-        if !self.state {
-            &mut self.grid0
-        } else {
-            &mut self.grid1
-        }
-    }*/
-    fn get_mutgrid_gridr_neighbors(
+    fn get_mutgrid_gridr_neighbors_ag(
         &mut self,
     ) -> (
         &mut Vec<Vec<Cell>>,
         &Vec<Vec<Cell>>,
         &Vec<Vec<[[(usize, usize); 3]; 3]>>,
+        &mut Vec<Vec<Ast>>,
     ) {
         if !self.state {
-            (&mut self.grid0, &self.grid1, &self.neighbors)
+            (&mut self.grid0, &self.grid1, &self.neighbors, &mut self.ag)
         } else {
-            (&mut self.grid1, &self.grid0, &self.neighbors)
+            (&mut self.grid1, &self.grid0, &self.neighbors, &mut self.ag)
         }
     }
-    fn update(&mut self) {
-        let (grid, prev, neighbors) = self.get_mutgrid_gridr_neighbors();
+    fn update(&mut self, _params: &Params) {
+        let (grid, prev, neighbors, _) = self.get_mutgrid_gridr_neighbors_ag();
         for i in 0..HEIGHT as usize {
             for j in 0..WIDTH as usize {
                 for l in 0..2 {
@@ -165,7 +151,7 @@ struct Agent {
 }
 
 impl Agent {
-    fn new_n(n: usize) -> Vec<Self> {
+    fn new_n(n: usize, params: &Params) -> Vec<Self> {
         let mut rng = rand::thread_rng();
         let mut res: Vec<Self> = vec![];
         for _ in 0..n {
@@ -188,19 +174,19 @@ impl Agent {
             let mut dir: f32 = rng.gen();
             dir *= TAU;
             let mut rot_m: f32 = rng.gen();
-            rot_m = ROT_M_AV + (rot_m * 2.0 - 1.0) * ROT_M_DIS;
+            rot_m = params.rot_m_av + (rot_m * 2.0 - 1.0) * params.rot_m_dis;
 
             let mut speed: f32 = rng.gen();
-            speed = SPEED_AV + (speed * 2.0 - 1.0) * SPEED_DIS;
+            speed = params.speed_av + (speed * 2.0 - 1.0) * params.speed_dis;
             let mut rot_s: f32 = rng.gen();
-            rot_s = ROT_S_AV + (rot_s * 2.0 - 1.0) * ROT_S_DIS;
+            rot_s = params.rot_s_av + (rot_s * 2.0 - 1.0) * params.rot_s_dis;
             let mut dis_s: f32 = rng.gen();
-            dis_s = DIS_S_AV + (dis_s * 2.0 - 1.0) * DIS_S_DIS;
+            dis_s = params.dis_s_av + (dis_s * 2.0 - 1.0) * params.dis_s_dis;
             let mut c_level: f32 = rng.gen();
-            c_level = C_LEVEL_AV + (c_level * 2.0 - 1.0) * C_LEVEL_DIS;
+            c_level = params.c_level_av + (c_level * 2.0 - 1.0) * params.c_level_dis;
             let c_dur: f32 = rng.gen();
-            let c_duration = (C_DURATION_AV as i32
-                + ((c_dur * 2.0 - 1.0) * C_DURATION_DIS as f32) as i32)
+            let c_duration = (params.c_duration_av as i32
+                + ((c_dur * 2.0 - 1.0) * params.c_duration_dis as f32) as i32)
                 as u16;
             res.push(Self {
                 cord: (cord_x, cord_y),
@@ -220,6 +206,7 @@ impl Agent {
     fn pos(p: (f32, f32), r: f32, d: f32, l: f32) -> (f32, f32) {
         let mut ans = p;
         let rot = r + d;
+
         ans = (ans.0 + l * rot.cos(), ans.1 + l * rot.sin());
 
         if ans.0 < 0.0 {
@@ -237,12 +224,19 @@ impl Agent {
 
         ans
     }
-    fn step(agents: &mut Vec<Self>, grid: &mut Vec<Vec<Cell>>, prev: &Vec<Vec<Cell>>) {
-        let phers: Vec<(usize, usize)> = agents
+    fn step(
+        agents: &mut Vec<Self>,
+        grid: &mut Vec<Vec<Cell>>,
+        prev: &Vec<Vec<Cell>>,
+        ag: &mut Vec<Vec<Ast>>,
+        params: &Params,
+    ) {
+        let phers: Vec<(usize, usize, bool)> = agents
             .par_iter_mut()
             .map(|a| {
                 let mut rng = rand::thread_rng();
                 //leave pheromone on grid
+
                 //grid[a.cord.1.floor() as usize][a.cord.0.floor() as usize].add(TRAIL);
 
                 //read data from sensors
@@ -285,59 +279,78 @@ impl Agent {
                 }
                 //add forced parameters
                 let rn: f32 = rng.gen();
-                a.dir += (rn * 2.0 - 1.0) * WOBBLE;
-                a.dir += FORCED_ROT;
-                (a.cord.1.floor() as usize, a.cord.0.floor() as usize)
+                a.dir += (rn * 2.0 - 1.0) * params.wobble;
+                a.dir += params.forced_rot;
+                (
+                    (a.cord.1).floor() as usize, // % HEIGHT as usize,
+                    (a.cord.0).floor() as usize, // % WIDTH as usize,
+                    a.is_crazy,
+                )
             })
             .collect();
-        phers.iter().for_each(|(y, x)| {
-            grid[*y][*x].add(TRAIL);
+        phers.iter().for_each(|(y, x, s)| {
+            grid[*y][*x].add(params.trail);
+            ag[*y][*x].set(match s {
+                false => 1,
+                true => 2,
+            });
         });
     }
 }
 
 pub struct World {
-    do_render_agents: bool,
-    do_render_pheromone: bool,
     grid: Grid,
     agents: Vec<Agent>,
 }
 
 impl World {
-    pub fn new() -> Self {
+    pub fn new(params: &Params) -> Self {
         Self {
-            do_render_agents: false,
-            do_render_pheromone: true,
             grid: Grid::new(),
-            agents: Agent::new_n(AGENTS_N),
+            agents: Agent::new_n(AGENTS_N, params),
         }
     }
 
-    pub fn update(&mut self) {
-        let (grid, prev, _) = self.grid.get_mutgrid_gridr_neighbors();
+    pub fn update(&mut self, params: &Params) {
+        let (grid, prev, _, ag) = self.grid.get_mutgrid_gridr_neighbors_ag();
 
         for i in 0..HEIGHT as usize {
             for j in 0..WIDTH as usize {
                 grid[i][j].flush();
+                ag[i][j].set(0);
             }
         }
 
-        Agent::step(&mut self.agents, grid, prev);
+        Agent::step(&mut self.agents, grid, prev, ag, params);
 
-        self.grid.update();
+        self.grid.update(params);
     }
 
     /// Draw the `World` state to the frame buffer.
     ///
     /// Assumes the default texture format: `wgpu::TextureFormat::Rgba8UnormSrgb`
-    pub fn draw(&self, frame: &mut [u8]) {
-        let grid = self.grid.get_grid();
+    pub fn draw(&self, frame: &mut [u8], params: &Params) {
+        let (grid, ag) = self.grid.get_grid_ag();
 
         for (i, pixel) in frame.chunks_exact_mut(4).enumerate() {
-            let x = (i % WIDTH as usize) as usize;
-            let y = (i / WIDTH as usize) as usize;
+            let x = i % WIDTH as usize;
+            let y = i / WIDTH as usize;
 
-            let rgba = grid[y][x].color();
+            let mut rgba: [u8; 4] = [0xff, 0xff, 0xff, 0xff];
+            if params.do_render_pheromone {
+                rgba = grid[y][x].color(params);
+            }
+            if params.do_render_agents {
+                match ag[y][x].state {
+                    1 => {
+                        rgba = [0x00, 0x00, 0x00, 0xff];
+                    }
+                    2 => {
+                        rgba = [0xff, 0x00, 0xff, 0xff];
+                    }
+                    _ => {}
+                }
+            }
 
             pixel.copy_from_slice(&rgba);
         }

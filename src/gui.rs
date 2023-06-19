@@ -4,6 +4,10 @@ use pixels::{wgpu, PixelsContext};
 use winit::event_loop::EventLoopWindowTarget;
 use winit::window::Window;
 
+use std::f32::consts::PI;
+
+use crate::sim::params::Params;
+
 /// Manages all state required for rendering egui over `Pixels`.
 pub(crate) struct Framework {
     // State for egui.
@@ -76,12 +80,12 @@ impl Framework {
     }
 
     /// Prepare egui.
-    pub(crate) fn prepare(&mut self, window: &Window, counter: &mut usize) {
+    pub(crate) fn prepare(&mut self, window: &Window, params: &mut Params) {
         // Run the egui frame and create all paint jobs to prepare for rendering.
         let raw_input = self.egui_state.take_egui_input(window);
         let output = self.egui_ctx.run(raw_input, |egui_ctx| {
             // Draw the demo application.
-            self.gui.ui(egui_ctx, counter);
+            self.gui.ui(egui_ctx, params);
         });
 
         self.textures.append(output.textures_delta);
@@ -144,23 +148,18 @@ impl Gui {
     }
 
     /// Create the UI using egui.
-    fn ui(&mut self, ctx: &Context, counter: &mut usize) {
+    fn ui(&mut self, ctx: &Context, params: &mut Params) {
         egui::TopBottomPanel::top("menubar_container").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
-                    if ui.button("About...").clicked() {
+                    if ui.button("Parameters").clicked() {
                         self.window_open = true;
                         ui.close_menu();
                     }
                 });
                 ui.horizontal(|ui| {
-                    if ui.button("-").clicked() {
-                        *counter -= 1;
-                    }
-                    ui.label(counter.to_string());
-                    if ui.button("+").clicked() {
-                        *counter += 1;
-                    }
+                    ui.toggle_value(&mut params.do_render_pheromone, "pheromone");
+                    ui.toggle_value(&mut params.do_render_agents, "agents");
                 });
             });
         });
@@ -168,16 +167,26 @@ impl Gui {
         egui::Window::new("Hello, egui!")
             .open(&mut self.window_open)
             .show(ctx, |ui| {
-                ui.label("This example demonstrates using egui with pixels.");
-                ui.label("Made with 💖 in San Francisco!");
+                ui.label("Those are simulation parameters.");
 
                 ui.separator();
 
-                ui.horizontal(|ui| {
-                    ui.spacing_mut().item_spacing.x /= 2.0;
-                    ui.label("Learn more about egui at");
-                    ui.hyperlink("https://docs.rs/egui");
-                });
+                ui.label("Random wobble per step:");
+                ui.add(egui::Slider::new(&mut params.wobble, 0.0..=PI / 6.0).text("radians"));
+
+                ui.separator();
+
+                ui.label("Forced rotation per step:");
+                ui.add(egui::Slider::new(&mut params.forced_rot, 0.0..=PI / 12.0).text("radians"));
+
+                ui.separator();
+
+                if ui.button("Randomize parameters").clicked() {
+                    params.randomize();
+                }
+
+                ui.label("Learn more about this program at");
+                ui.hyperlink("https://github.com/dyatelok/physarum");
             });
     }
 }
