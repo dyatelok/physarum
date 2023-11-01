@@ -26,6 +26,7 @@ use crate::sim::params::Params;
 pub mod sim;
 
 fn main() -> Result<(), Error> {
+
     env_logger::init();
     let event_loop = EventLoop::new();
     let mut input = WinitInputHelper::new();
@@ -37,7 +38,7 @@ fn main() -> Result<(), Error> {
             .with_min_inner_size(size)
             .build(&event_loop)
             .unwrap()
-    };
+    };    
 
     let (mut pixels, mut framework) = {
         let window_size = window.inner_size();
@@ -172,3 +173,11 @@ fn log_error<E: std::error::Error + 'static>(method_name: &str, err: E) {
         error!("  Caused by: {source}");
     }
 }
+
+
+
+
+
+
+
+
