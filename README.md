@@ -3,11 +3,14 @@
 Agent based ants and slime mold simulaton written in rust. To run use ```cargo run --release```
 
 Pheromone render:
-![image](https://github.com/dyatelok/physarum/assets/92210438/2d9303bb-4d26-41e3-9773-4f5823b9ca16)
+![image](https://github.com/dyatelok/physarum/assets/92210438/f871499e-6e98-408f-896c-54553f5478a6)
+
 Agents render:
-![image](https://github.com/dyatelok/physarum/assets/92210438/35816f8e-0000-4f0f-9466-a1ef18a327bb)
+![image](https://github.com/dyatelok/physarum/assets/92210438/61c081f4-fc70-4c2d-b33d-2c53cd3d781a)
+
 Agents and pheromone render:
-![image](https://github.com/dyatelok/physarum/assets/92210438/f4d944e4-4566-4362-8dc0-8949cc01e350)
+![image](https://github.com/dyatelok/physarum/assets/92210438/41d08109-a1e1-4eed-a2c9-c594644b5c94)
+
 
 TODO:
   - Parameters sliders
